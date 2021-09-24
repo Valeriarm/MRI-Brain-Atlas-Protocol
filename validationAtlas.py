@@ -3,11 +3,9 @@ import nibabel as nib
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-from pydicom.data import get_testdata_files
-import pydicom
 from os import system, getcwd, makedirs, walk, sep, pardir, remove
 from os.path import exists, join, normpath
-import shutil, sys, glob, shutil, scipy, math
+import shutil, sys, glob, shutil, math
 
 
 DIRROBEX = join(getcwd(), "ROBEX")
@@ -179,36 +177,6 @@ def jacobianIntegration(inDir):
     jacobianDir = join(inpreviousdir,"output_validation","output_jacobian")
     _, _, jacobianImages = next(walk(jacobianDir))
 
-    '''
-    #recorro las imagenes de prueba y obtengo la mascara (matriz booleana)
-    aux = -1
-
-    for j in jacobianImages:
-        aux =aux+1
-        if (j.split("-")[1] in delisImages[math.floor(aux/2)]):
-            if("_delis.nii.gz" in delisImages[math.floor(aux/2)]):
-
-                img = nib.load(join(delisOutputDir, delisImages[math.floor(aux/2)]))
-                imageRef = np.array(img.dataobj)
-                imageMask = imageRef>0
-
-                imgJ = nib.load(join(jacobianDir, j))
-                imageJ = np.array(imgJ.dataobj)
-                
-                for k in range (len(imageMask)):
-                    for l in range(len(imageMask[0])):
-                        if(not imageMask[k][l].all):
-                            imageJ[k][l]= 0
-                            imageRef[k][l]= 0
-
-        new_image = nib.Nifti1Image(imageJ, affine=np.eye(4))
-        nib.save(new_image, join(inpreviousdir, "output_validation", "output_jacobian_integration", j.split(".")[0]+"_integration.nii.gz" ))
-        file = open(join(inpreviousdir, "output_validation", "output_jacobian_integration",j.split(".")[0]+".txt"), "w")
-        file.write("\n" + delisImages[math.floor(aux/2)].split(".")[0] + "\n" + j.split("-")[0] + "\n" + str(np.sum(np.abs(imageJ))) + "\n" + str(np.sum(np.abs(imageRef))) + "\n" + str(np.sum(np.abs(imageJ))/np.sum(np.abs(imageRef))))
-        del j
-        #print(np.sum(np.abs(imageJ))/np.sum(np.abs(imageRef)))
-    
-    '''
     aux=0
     for j in jacobianImages:
                 aux=aux+1
@@ -218,6 +186,10 @@ def jacobianIntegration(inDir):
             img = nib.load(join(delisOutputDir, i))
             imageRef = np.array(img.dataobj)
             imageMask = imageRef>0
+            
+            icv = imageMask.sum()
+
+            print(icv)
 
             print("\nEstoy en la imagen" + i+"\n")
         
@@ -232,11 +204,10 @@ def jacobianIntegration(inDir):
                         for l in range(len(imageMask[0])):
                             if(not imageMask[k][l].all):
                                 imageJ[k][l]= 0
-                                imageRef[k][l]= 0
                     new_image = nib.Nifti1Image(imageJ, affine=np.eye(4))
                     nib.save(new_image, join(inpreviousdir, "output_validation", "output_jacobian_integration", jacobianImages[j].split(".")[0]+"_integration.nii.gz" ))
                     file = open(join(inpreviousdir, "output_validation", "output_jacobian_integration",jacobianImages[j].split(".")[0]+".txt"), "w")
-                    file.write("\n" + i.split(".")[0] + "\n" + jacobianImages[j].split("-")[0] + "\n" + str(np.sum(np.abs(imageJ))) + "\n" + str(np.sum(np.abs(imageRef))) + "\n" + str(np.sum(np.abs(imageJ))/np.sum(np.abs(imageRef))))
+                    file.write("\n" + i.split(".")[0] + "\n" + jacobianImages[j].split("-")[0] + "\n" + str(np.sum(np.abs(imageJ))) + "\n" + str(icv.sum()) + "\n" + str(np.sum(np.abs(imageJ))/icv.sum()))
                     
     
 
@@ -251,9 +222,9 @@ def main():
     if not exists(join(normpath(inDir2 + sep +  pardir) , "output_validation")):
         makedirs(join(normpath(inDir2 + sep +  pardir) , "output_validation"))
     
-    '''
+
     print("Ejecuta Robex en imagenes de validacion")
-    robex(inDir)
+    robex(inDir2)
 
     print("Ejecuta DeLIS en imagenes de validacion")
     deLIS('/home/biomarcadores/Escritorio/brainAtlas/brain_atlas_script/validationImages', "/home/biomarcadores/Escritorio/brainAtlas/brain_atlas_script/DeLIS/data/", "515608025efe")
@@ -268,12 +239,10 @@ def main():
     print("Ejecuta ANTs Registration SyN para registro no rigido entre atlas y casos prueba")
     nonRigidRegistration(inDir2)
     
-    '''
 
-    #print("Ejecuta ANTs CreateJacobian para obtener la imagen del determinante jacobiano")
-    #createJacobian(inDir2)
+    print("Ejecuta ANTs CreateJacobian para obtener la imagen del determinante jacobiano")
+    createJacobian(inDir2)
 
-    
 
     print("Integra el jacobiano con la imagen de referecia")
     jacobianIntegration(inDir2)
