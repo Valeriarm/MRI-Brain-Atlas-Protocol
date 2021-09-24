@@ -621,7 +621,7 @@ def main():
     average(inDir, join(normpath(inDir + sep +  pardir) , "output_atlas", "output_FLIRT_images", "normmi_trilinear_noDeLIS"), "averagepro_affine_normmi_trilinear_noDeLIS.nii.gz")
 
     #nonLinearAtlas(inDir)
-    '''
+    
 
     corratio_trilinear_noDeLIS(inDir)
     normmi_trilinear_noDeLIS(inDir)
@@ -636,7 +636,7 @@ def main():
     
 
     #averageNonRigid(inDir, join(normpath(inDir + sep +  pardir) , "output_atlas", "output_ANTS"), "averagepro_affine_corratio_trilinear_noLinear.nii.gz")
-
+    '''
 
 
 main()
